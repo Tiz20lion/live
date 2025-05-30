@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiz Lead Scraper</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    
+    <style>
+        /* Simple Navigation Styles */
+        .global-navigation {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-dropdown {
+            position: relative;
+        }
+        
+        .nav-trigger {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-trigger:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            margin-top: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dropdown.active .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .nav-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-item:last-child {
+            border-bottom: none;
+        }
+        
+        .nav-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .nav-item.active {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .nav-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .nav-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .main-container {
+            padding-top: 80px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        
+        /* Button Styles */
+        .start-button {
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .start-button:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        
+        .start-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Form Styles */
+        .input-section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .url-textarea, .api-input, .maps-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        .url-textarea:focus, .api-input:focus, .maps-textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Page Display */
+        .dashboard-page {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-page[data-active="true"] {
+            display: block;
+        }
+        
+        /* Lead Count Display */
+        .lead-count-display {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        #leadCountDisplay {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+        
+        .quick-select-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .quick-btn {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .quick-btn:hover {
+            background: #f9fafb;
+            border-color: #2563eb;
+        }
+        
+        .quick-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        /* Field Selection */
+        .field-toggle-card {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .field-toggle-card:hover {
+            border-color: #2563eb;
+        }
+        
+        .field-toggle-card.active {
+            background: #dbeafe;
+            border-color: #2563eb;
+        }
+        
+        /* Export Cards */
+        .export-card {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .export-card:hover {
+            border-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        /* Tab Styles */
+        .tab-buttons {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .tab-button {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Progress Styles */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #16a34a;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        /* Results Table */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            text-align: left;
+        }
+        
+        .results-table th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+        
+        /* Utility Classes */
+        .section-header {
+            margin-bottom: 24px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        .export-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+        }
+        
+        .loading-spinner.active {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Global Navigation -->
+    <nav class="global-navigation">
+        <div class="nav-dropdown" id="globalNavDropdown">
+            <button class="nav-trigger" type="button">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-dropdown-menu">
+                <div class="nav-item active" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" data-page="configure">
+                    <i class="fas fa-cog"></i>
+                    <span>Configure</span>
+                </div>
+                <div class="nav-item" data-page="progress">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Progress</span>
+                </div>
+                <div class="nav-item" data-page="results">
+                    <i class="fas fa-table"></i>
+                    <span>Results</span>
+                </div>
+                <div class="nav-item" data-page="settings">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Homepage -->
+        <div class="dashboard-page" id="homePage" data-active="true">
+            <div class="section-header">
+                <h1>Advanced Multi-Source Lead Extraction Platform</h1>
+                <p>Extract up to 50,000 high-quality leads from Apollo.io and Google Maps with flexible source selection and 25+ data fields.</p>
+            </div>
+
+            <div class="feature-highlights">
+                <div class="feature-item">
+                    <h3>Lightning Fast</h3>
+                    <p>Extract thousands of leads in minutes from either or both data sources</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Flexible Sources</h3>
+                    <p>Use Apollo.io only, Google Maps only, or combine both for maximum coverage</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Rich Data Fields</h3>
+                    <p>25+ data fields including contacts, business info, ratings, and social profiles</p>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button id="startAutomationBtn" class="start-button">
+                    <i class="fas fa-rocket"></i>
+                    <span>Start Smart Lead Extraction</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="dashboard-page" id="configurationSection">
+            <div class="section-header">
+                <h2>Configuration</h2>
+                <p>Configure your data sources and extraction parameters</p>
+            </div>
+
+            <div class="config-grid">
+                <!-- Left Column -->
+                <div class="config-column">
+                    <!-- Apollo URLs -->
+                    <div class="input-section">
+                        <label for="urlInput" class="input-label">
+                            Apollo.io URLs (Optional)
+                        </label>
+                        <textarea 
+                            id="urlInput" 
+                            class="url-textarea" 
+                            placeholder="Enter Apollo.io URLs, one per line..."
+                            rows="6"
+                        ></textarea>
+                        <div class="input-help">
+                            Optional: Enter Apollo.io URLs for professional contact data
+                        </div>
+                    </div>
+
+                    <!-- Google Maps -->
+                    <div class="input-section">
+                        <label class="input-label">
+                            Google Maps (Business Data) - Optional
+                        </label>
+                        
+                        <div class="maps-input-row">
+                            <label for="mapsSearchTerms">Search Terms (Optional)</label>
+                            <textarea 
+                                id="mapsSearchTerms" 
+                                class="maps-textarea" 
+                                placeholder="restaurant, hotel, pharmacy"
+                                rows="3"
+                            ></textarea>
+                        </div>
+                        
+                        <div class="maps-input-row">
+                            <label for="mapsLocation">Location (Optional)</label>
+                            <input 
+                                type="text" 
+                                id="mapsLocation" 
+                                placeholder="New York, NY"
+                                class="api-input"
+                            >
+                        </div>
+
+                        <div class="maps-input-row">
+                            <label for="mapsUrls">Google Maps URLs (Optional)</label>
+                            <textarea 
+                                id="mapsUrls" 
+                                class="maps-textarea" 
+                                placeholder="https://maps.google.com/..."
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="maps-input-row">
+                            <label for="mapsMaxPlaces">Max Places</label>
+                            <input 
+                                type="number" 
+                                id="mapsMaxPlaces" 
+                                value="50"
+                                min="1"
+                                max="1000"
+                                class="api-input"
+                            >
+                        </div>
+
+                        <div class="maps-input-row">
+                            <label for="mapsMinStars">Minimum Stars</label>
+                            <select id="mapsMinStars" class="api-input">
+                                <option value="">Any Rating</option>
+                                <option value="1">1+ Stars</option>
+                                <option value="2">2+ Stars</option>
+                                <option value="3">3+ Stars</option>
+                                <option value="4">4+ Stars</option>
+                                <option value="5">5 Stars</option>
+                            </select>
+                        </div>
+
+                        <div class="maps-input-row">
+                            <label for="mapsEnrichment">Enrichment Records</label>
+                            <input 
+                                type="number" 
+                                id="mapsEnrichment" 
+                                value="0"
+                                min="0"
+                                max="1000"
+                                class="api-input"
+                            >
+                        </div>
+
+                        <div class="maps-input-row">
+                            <label>
+                                <input type="checkbox" id="mapsSkipClosed">
+                                Skip Closed Businesses
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="config-column">
+                    <!-- Lead Count -->
+                    <div class="input-section">
+                        <label class="input-label">Lead Count</label>
+                        
+                        <div class="lead-count-display">
+                            <div class="count-value">
+                                <span id="leadCountDisplay">100</span>
+                                <span class="count-unit">leads</span>
+                            </div>
+                            <div class="count-range">Range: 1 - 50,000</div>
+                        </div>
+
+                        <div class="quick-select-buttons">
+                            <button class="quick-btn active" data-value="100">100</button>
+                            <button class="quick-btn" data-value="500">500</button>
+                            <button class="quick-btn" data-value="1000">1,000</button>
+                            <button class="quick-btn" data-value="2500">2,500</button>
+                            <button class="quick-btn" data-value="5000">5,000</button>
+                            <button class="quick-btn" data-value="10000">10,000</button>
+                        </div>
+
+                        <input 
+                            type="range" 
+                            id="leadCount" 
+                            min="1" 
+                            max="50000" 
+                            value="100"
+                            style="width: 100%; margin-bottom: 10px;"
+                        >
+                        
+                        <input 
+                            type="number" 
+                            id="leadCountInput" 
+                            min="1" 
+                            max="50000" 
+                            value="100"
+                            class="api-input"
+                            placeholder="Enter lead count..."
+                        >
+                    </div>
+
+                    <!-- Field Selection -->
+                    <div class="input-section">
+                        <label class="input-label">
+                            Data Fields to Extract
+                            <span id="selectedCount">0</span> selected
+                        </label>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <button id="selectAllFields" class="start-button" style="margin-right: 8px;">
+                                Select All
+                            </button>
+                            <button id="clearAllFields" class="start-button" style="background: #dc2626;">
+                                Clear All
+                            </button>
+                        </div>
+
+                        <div class="field-category">
+                            <div class="field-toggle-card" data-field="name">
+                                <input type="checkbox" value="name" style="margin-right: 8px;">
+                                <span>Company Name</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="website">
+                                <input type="checkbox" value="website" style="margin-right: 8px;">
+                                <span>Website</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="phone">
+                                <input type="checkbox" value="phone" style="margin-right: 8px;">
+                                <span>Phone Number</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="email">
+                                <input type="checkbox" value="email" style="margin-right: 8px;">
+                                <span>Email</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="address">
+                                <input type="checkbox" value="address" style="margin-right: 8px;">
+                                <span>Address</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="industry">
+                                <input type="checkbox" value="industry" style="margin-right: 8px;">
+                                <span>Industry</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="employees">
+                                <input type="checkbox" value="employees" style="margin-right: 8px;">
+                                <span>Employee Count</span>
+                            </div>
+                            <div class="field-toggle-card" data-field="revenue">
+                                <input type="checkbox" value="revenue" style="margin-right: 8px;">
+                                <span>Revenue</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="action-section">
+                <button id="startScraping" class="start-button">
+                    <i class="fas fa-play"></i>
+                    <span class="button-text">Start Multi-Source Extraction</span>
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="dashboard-page" id="progressSection">
+            <div class="section-header">
+                <h2>Scraping Progress</h2>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span class="progress-label">Progress</span>
+                    <span class="progress-percentage" id="progressPercentage">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-message" id="progressMessage">Ready to start...</div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="dashboard-page" id="settingsPage">
+            <div class="section-header">
+                <h2>Settings & Configuration</h2>
+            </div>
+
+            <div class="config-grid">
+                <!-- API Key Settings -->
+                <div class="config-column">
+                    <div class="input-section">
+                        <label for="apifyToken" class="input-label">
+                            Apify API Token (Required)
+                        </label>
+                        <input 
+                            type="password" 
+                            id="apifyToken" 
+                            placeholder="Enter your Apify API token..."
+                            class="api-input"
+                        >
+                        <div class="input-help">
+                            Get your token from <a href="https://apify.com/" target="_blank">Apify.com</a> → Settings → Integrations
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integration Settings -->
+                <div class="config-column">
+                    <div class="input-section">
+                        <label class="input-label">
+                            Export Integrations (Optional)
+                        </label>
+
+                        <div class="integrations-tabs">
+                            <div class="tab-buttons">
+                                <button class="tab-button active" data-tab="sheets">
+                                    <i class="fas fa-table"></i>
+                                    Google Sheets
+                                </button>
+                                <button class="tab-button" data-tab="notion">
+                                    <i class="fas fa-file-alt"></i>
+                                    Notion
+                                </button>
+                            </div>
+
+                            <div class="tab-content active" id="sheets-tab">
+                                <textarea 
+                                    id="googleCredentials" 
+                                    placeholder="Paste Google Service Account JSON credentials (optional)"
+                                    class="api-input"
+                                    rows="3"
+                                ></textarea>
+                                <input 
+                                    type="text" 
+                                    id="spreadsheetId" 
+                                    placeholder="Spreadsheet ID (optional)"
+                                    class="api-input"
+                                    style="margin-top: 8px;"
+                                >
+                                <input 
+                                    type="text" 
+                                    id="sheetName" 
+                                    placeholder="Sheet Name (default: Leads)"
+                                    class="api-input"
+                                    style="margin-top: 8px;"
+                                >
+                            </div>
+
+                            <div class="tab-content" id="notion-tab">
+                                <input 
+                                    type="password" 
+                                    id="notionToken" 
+                                    placeholder="Notion Integration Token (optional)"
+                                    class="api-input"
+                                    style="margin-bottom: 8px;"
+                                >
+                                <input 
+                                    type="text" 
+                                    id="notionDatabaseId" 
+                                    placeholder="Notion Database ID (optional)"
+                                    class="api-input"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button id="saveSettings" class="start-button">
+                    <i class="fas fa-save"></i>
+                    <span class="button-text">Save Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="dashboard-page" id="resultsSection">
+            <div class="section-header">
+                <h2>Results & Export</h2>
+                <div class="results-stats">
+                    <span id="resultsCount">0 leads found</span>
+                </div>
+            </div>
+
+            <div class="results-grid">
+                <!-- Results Preview -->
+                <div class="results-preview">
+                    <h3>Preview</h3>
+                    <div class="table-container">
+                        <table class="results-table" id="resultsTable">
+                            <thead id="resultsTableHead">
+                                <!-- Dynamic headers -->
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Export Actions -->
+                <div class="export-panel">
+                    <h3>Export Your Data</h3>
+
+                    <div class="export-grid">
+                        <button id="exportCsv" class="export-card">
+                            <i class="fas fa-download"></i>
+                            <div>
+                                <div class="export-title">Download CSV</div>
+                                <div class="export-desc">Standard spreadsheet format</div>
+                            </div>
+                        </button>
+
+                        <button id="exportJson" class="export-card">
+                            <i class="fas fa-code"></i>
+                            <div>
+                                <div class="export-title">Download JSON</div>
+                                <div class="export-desc">Structured data format</div>
+                            </div>
+                        </button>
+
+                        <button id="exportSheets" class="export-card">
+                            <i class="fas fa-table"></i>
+                            <div>
+                                <div class="export-title">Google Sheets</div>
+                                <div class="export-desc">Direct cloud export</div>
+                            </div>
+                        </button>
+
+                        <button id="exportNotion" class="export-card">
+                            <i class="fas fa-file-alt"></i>
+                            <div>
+                                <div class="export-title">Notion Database</div>
+                                <div class="export-desc">Sync to workspace</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+    <script src="/static/js/app.js"></script>
+
+    <script>
+        // Ensure everything loads properly
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            
+            // Test basic functionality
+            const navTrigger = document.querySelector('.nav-trigger');
+            const navDropdown = document.getElementById('globalNavDropdown');
+            
+            if (navTrigger && navDropdown) {
+                console.log('Navigation elements found');
+                
+                navTrigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Navigation clicked');
+                    navDropdown.classList.toggle('active');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!navDropdown.contains(e.target)) {
+                        navDropdown.classList.remove('active');
+                    }
+                });
+                
+                // Handle navigation items
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const page = this.getAttribute('data-page');
+                        console.log('Navigating to:', page);
+                        
+                        // Update active states
+                        navItems.forEach(n => n.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Show page
+                        showPage(page);
+                        navDropdown.classList.remove('active');
+                    });
+                });
+            } else {
+                console.error('Navigation elements not found');
+            }
+            
+            // Page navigation function
+            function showPage(pageName) {
+                const pages = {
+                    'home': 'homePage',
+                    'configure': 'configurationSection',
+                    'progress': 'progressSection',
+                    'settings': 'settingsPage',
+                    'results': 'resultsSection'
+                };
+                
+                // Hide all pages
+                document.querySelectorAll('.dashboard-page').forEach(page => {
+                    page.removeAttribute('data-active');
+                    page.style.display = 'none';
+                });
+                
+                // Show target page
+                const targetPageId = pages[pageName];
+                if (targetPageId) {
+                    const targetPage = document.getElementById(targetPageId);
+                    if (targetPage) {
+                        targetPage.setAttribute('data-active', 'true');
+                        targetPage.style.display = 'block';
+                        window.scrollTo(0, 0);
+                    }
+                }
+            }
+            
+            // Test buttons
+            const startAutomationBtn = document.getElementById('startAutomationBtn');
+            if (startAutomationBtn) {
+                startAutomationBtn.addEventListener('click', function() {
+                    console.log('Start automation clicked');
+                    showPage('configure');
+                });
+            }
+            
+            const startScrapingBtn = document.getElementById('startScraping');
+            if (startScrapingBtn) {
+                startScrapingBtn.addEventListener('click', function() {
+                    console.log('Start scraping clicked');
+                    alert('Start scraping button works! (This will be connected to the full functionality)');
+                });
+            }
+            
+            const saveSettingsBtn = document.getElementById('saveSettings');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', function() {
+                    console.log('Save settings clicked');
+                    alert('Save settings button works!');
+                });
+            }
+            
+            console.log('Basic initialization complete');
+        });
+    </script>
+</body>
+</html>
