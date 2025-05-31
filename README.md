@@ -1,4 +1,4 @@
-# 🚀 Tiz Lead Scraper
+# 🚀 Tiz Lead Scraper.
 
 [![Docker Build](https://github.com/tiz20lion/tiz-lead-scraper/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/tiz20lion/tiz-lead-scraper/actions/workflows/docker-publish.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/tiz20lion/tiz-lead-scraper)](https://hub.docker.com/r/tiz20lion/tiz-lead-scraper)
