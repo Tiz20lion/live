@@ -8,7 +8,7 @@ A powerful, production-ready web scraper for extracting leads from **Apollo.io**
 
 ## ✨ Features
 
-- **🎯 Apollo.io Integration**: Extract up to 50,000 leads with 15+ data fields
+- **🎯 Apollo.io Integration**: Extract up to 50,000 leads with 15+ data fields.
 - **🗺️ Google Maps Scraper**: Extract business data from Maps using search terms, locations, or direct URLs
 - **📊 Multiple Export Options**: CSV, JSON, Google Sheets, and Notion
 - **🎨 Modern UI**: Beautiful glass-morphism design with smooth animations
